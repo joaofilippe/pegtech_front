@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:pegtech_front/pages/employee_page.dart';
 import 'package:provider/provider.dart';
-import 'providers/client_provider.dart';
-import 'pages/user_page.dart';
+import 'providers/auth_provider.dart';
+import 'pages/login_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,17 +10,28 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => ClientProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+      ],
       child: MaterialApp(
         title: 'PegTech',
         theme: ThemeData(
-          primarySwatch: Colors.purple,
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.purple),
+          useMaterial3: true,
+          inputDecorationTheme: InputDecorationTheme(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+          ),
         ),
-        home: const EmployeePage(),
+        home: const LoginPage(),
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/client_provider.dart';
+import '../models/user.dart';
 
 class EmployeePage extends StatefulWidget {
   const EmployeePage({super.key});
@@ -15,6 +16,7 @@ class _EmployeePageState extends State<EmployeePage> {
   bool _sending = false;
   bool _showResult = false;
   String? _lockerNumber;
+  String? _portNumber;
   String? _registrationCode;
 
   @override
@@ -59,11 +61,12 @@ class _EmployeePageState extends State<EmployeePage> {
         _sending = false;
         _showResult = true;
         _lockerNumber = result.lockerNumber;
+        _portNumber = result.portNumber;
         _registrationCode = result.registrationCode;
       });
     } catch (e) {
       if (!mounted) return;
-      
+
       setState(() {
         _sending = false;
       });
@@ -78,8 +81,52 @@ class _EmployeePageState extends State<EmployeePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Página do Funcionário', style: TextStyle(color: Colors.white)),
+        title: Column(
+          children: [
+            const Text(
+              'PegTech',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 42,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Registro de Encomendas',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.9),
+                fontSize: 24,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
+        centerTitle: true,
         backgroundColor: Colors.purple,
+        elevation: 0,
+        toolbarHeight: 100,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(4.0),
+          child: Container(
+            height: 4,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.purple.shade300,
+                  Colors.purple.shade700,
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Provider.of<ClientProvider>(context, listen: false).fetchClients();
+        },
+        backgroundColor: Colors.purple,
+        child: const Icon(Icons.refresh, size: 32, color: Colors.white),
       ),
       body: Consumer<ClientProvider>(
         builder: (context, clientProvider, child) {
@@ -114,8 +161,8 @@ class _EmployeePageState extends State<EmployeePage> {
             );
           }
 
-          final clients = clientProvider.clients;
-          if (clients.isEmpty) {
+          final users = clientProvider.clients;
+          if (users.isEmpty) {
             return const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -155,13 +202,14 @@ class _EmployeePageState extends State<EmployeePage> {
                               border: OutlineInputBorder(),
                               filled: true,
                               fillColor: Colors.white,
-                              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
                             ),
                             value: _selectedClientId,
-                            items: clients.map((client) {
+                            items: users.map((user) {
                               return DropdownMenuItem(
-                                value: client.id,
-                                child: Text(client.name),
+                                value: user.id,
+                                child: Text('${user.name} (${user.email})'),
                               );
                             }).toList(),
                             onChanged: (String? value) {
@@ -199,7 +247,8 @@ class _EmployeePageState extends State<EmployeePage> {
                               filled: true,
                               fillColor: Colors.white,
                               hintText: 'Digite o número de horas',
-                              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
                             ),
                             keyboardType: TextInputType.number,
                           ),
@@ -212,7 +261,8 @@ class _EmployeePageState extends State<EmployeePage> {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.purple,
-                        padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 50, vertical: 15),
                       ),
                       onPressed: _sending ? null : _handleSubmit,
                       child: _sending
@@ -221,7 +271,8 @@ class _EmployeePageState extends State<EmployeePage> {
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             )
                           : const Text(
@@ -234,74 +285,94 @@ class _EmployeePageState extends State<EmployeePage> {
                     ),
                   ),
                 ] else ...[
-                  Card(
-                    color: Colors.purple[100],
-                    child: Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Column(
-                        children: [
-                          const Icon(
-                            Icons.check_circle_outline,
-                            size: 64,
-                            color: Colors.green,
-                          ),
-                          const SizedBox(height: 24),
-                          Text(
-                            'Locker Atribuído',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.purple[800],
+                  Center(
+                    child: Card(
+                      color: Colors.purple[100],
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          children: [
+                            const Icon(
+                              Icons.check_circle_outline,
+                              size: 64,
+                              color: Colors.green,
                             ),
-                          ),
-                          const SizedBox(height: 32),
-                          Text(
-                            _lockerNumber!,
-                            style: const TextStyle(
-                              fontSize: 48,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.purple,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          const Text(
-                            'Código de Registro',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _registrationCode!,
-                            style: const TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 2,
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.purple,
-                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _showResult = false;
-                                _selectedClientId = null;
-                                _hoursController.clear();
-                              });
-                            },
-                            child: const Text(
-                              'Novo Registro',
+                            const SizedBox(height: 24),
+                            Text(
+                              'Pacote Registrado com Sucesso!',
                               style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.purple[800],
                               ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 32),
+                            Text(
+                              _lockerNumber!,
+                              style: const TextStyle(
+                                fontSize: 48,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.purple,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            const Text(
+                              'Número da Porta',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _portNumber!,
+                              style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            const Text(
+                              'Código de Registro',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _registrationCode!,
+                              style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.purple,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 32, vertical: 12),
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _showResult = false;
+                                  _selectedClientId = null;
+                                  _hoursController.clear();
+                                });
+                              },
+                              child: const Text(
+                                'Novo Registro',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

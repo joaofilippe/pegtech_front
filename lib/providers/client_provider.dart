@@ -1,12 +1,14 @@
 import 'package:flutter/foundation.dart';
-import '../models/client.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../models/user.dart';
 
 class ClientProvider with ChangeNotifier {
-  List<Client> _clients = [];
+  List<User> _clients = [];
   bool _isLoading = false;
   String? _error;
 
-  List<Client> get clients => _clients;
+  List<User> get clients => _clients;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -16,22 +18,17 @@ class ClientProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      // TODO: Replace with your actual API call
-      await Future.delayed(const Duration(seconds: 1));
-      _clients = [
-        Client(
-          id: '1',
-          name: 'João Silva',
-          code: '123456',
-          isAvailable: true,
-        ),
-        Client(
-          id: '2',
-          name: 'Maria Santos',
-          code: '789012',
-          isAvailable: false,
-        ),
-      ];
+      final response = await http.get(Uri.parse('http://localhost:8080/users'));
+      
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        _clients = data
+            .map((json) => User.fromJson(json))
+            .where((user) => user.type == 'C')
+            .toList();
+      } else {
+        _error = 'Erro ao carregar clientes: ${response.statusCode}';
+      }
     } catch (e) {
       _error = 'Erro ao carregar clientes: $e';
     } finally {
@@ -44,22 +41,40 @@ class ClientProvider with ChangeNotifier {
     required String clientId,
     required String hours,
   }) async {
-    // TODO: Replace with your actual API call
-    await Future.delayed(const Duration(seconds: 2));
-    
-    return RegistrationResult(
-      lockerNumber: 'L-${(DateTime.now().millisecondsSinceEpoch % 100).toString().padLeft(2, '0')}',
-      registrationCode: DateTime.now().millisecondsSinceEpoch.toString().substring(0, 6),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:8080/lockers/package'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'user_id': clientId,
+          'expiration_time': int.parse(hours),
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        final data = json.decode(response.body);
+        return RegistrationResult(
+          lockerNumber: data['locker'].toString(),
+          portNumber: data['port'].toString(),
+          registrationCode: data['package_code'],
+        );
+      } else {
+        throw Exception('Erro ao registrar pacote: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Erro ao registrar pacote: $e');
+    }
   }
 }
 
 class RegistrationResult {
   final String lockerNumber;
+  final String portNumber;
   final String registrationCode;
 
   RegistrationResult({
     required this.lockerNumber,
+    required this.portNumber,
     required this.registrationCode,
   });
 } 
