@@ -17,18 +17,17 @@ class ClientProvider with ChangeNotifier {
 
     try {
       // TODO: Replace with your actual API call
-      // Simulated API call
       await Future.delayed(const Duration(seconds: 1));
       _clients = [
         Client(
           id: '1',
-          name: 'João da Silva',
+          name: 'João Silva',
           code: '123456',
           isAvailable: true,
         ),
         Client(
           id: '2',
-          name: 'Maria Oliveira',
+          name: 'Maria Santos',
           code: '789012',
           isAvailable: false,
         ),
@@ -40,4 +39,27 @@ class ClientProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<RegistrationResult> submitRegistration({
+    required String clientId,
+    required String hours,
+  }) async {
+    // TODO: Replace with your actual API call
+    await Future.delayed(const Duration(seconds: 2));
+    
+    return RegistrationResult(
+      lockerNumber: 'L-${(DateTime.now().millisecondsSinceEpoch % 100).toString().padLeft(2, '0')}',
+      registrationCode: DateTime.now().millisecondsSinceEpoch.toString().substring(0, 6),
+    );
+  }
+}
+
+class RegistrationResult {
+  final String lockerNumber;
+  final String registrationCode;
+
+  RegistrationResult({
+    required this.lockerNumber,
+    required this.registrationCode,
+  });
 } 

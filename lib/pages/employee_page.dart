@@ -40,22 +40,38 @@ class _EmployeePageState extends State<EmployeePage> {
       return;
     }
 
+    final clientProvider = Provider.of<ClientProvider>(context, listen: false);
+
     setState(() {
       _sending = true;
       _showResult = false;
     });
 
-    // Simulando chamada à API
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final result = await clientProvider.submitRegistration(
+        clientId: _selectedClientId!,
+        hours: _hoursController.text,
+      );
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    setState(() {
-      _sending = false;
-      _showResult = true;
-      _lockerNumber = 'L-${(DateTime.now().millisecondsSinceEpoch % 100).toString().padLeft(2, '0')}';
-      _registrationCode = DateTime.now().millisecondsSinceEpoch.toString().substring(0, 6);
-    });
+      setState(() {
+        _sending = false;
+        _showResult = true;
+        _lockerNumber = result.lockerNumber;
+        _registrationCode = result.registrationCode;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      
+      setState(() {
+        _sending = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao registrar: $e')),
+      );
+    }
   }
 
   @override
